@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>题库学习</title>
+<style>
+  :root{
+    --bg:#070c18;
+    --bg2:#0b1224;
+    --card:#111b30;
+    --card2:#162238;
+    --border:#23304d;
+    --border2:#31446b;
+    --text:#e8eefb;
+    --dim:#8b9bb8;
+    --accent:#2f7bff;
+    --accent2:#43d9ff;
+    --glow:rgba(47,123,255,.55);
+    --green:#2fd08a;
+    --red:#ff5d6c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:
+      radial-gradient(1200px 620px at 12% -10%, rgba(47,123,255,.20), transparent 60%),
+      radial-gradient(900px 520px at 100% 8%, rgba(67,217,255,.13), transparent 55%),
+      linear-gradient(180deg, var(--bg), var(--bg2));
+    background-attachment:fixed;
+    color:var(--text);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:840px;margin:0 auto;padding:36px 20px 72px}
+
+  /* ---------- 按钮 ---------- */
+  .btn{
+    font:inherit;color:var(--text);background:transparent;
+    border:1px solid var(--border);border-radius:12px;
+    padding:11px 22px;cursor:pointer;transition:.18s;
+    display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  }
+  .btn:hover{border-color:var(--border2);background:rgba(47,123,255,.10)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.38;cursor:not-allowed;pointer-events:none}
+  .btn.primary{
+    background:linear-gradient(135deg,var(--accent),#1f5fe0);
+    border-color:transparent;color:#fff;font-weight:600;
+    box-shadow:0 8px 24px rgba(47,123,255,.28);
+  }
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{background:rgba(22,34,56,.5)}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .topbar .btn{padding:8px 16px}
+  .mode-title{flex:1;text-align:center;font-weight:600;letter-spacing:2px;color:var(--accent2)}
+  .counter{color:var(--dim);font-size:14px;font-variant-numeric:tabular-nums}
+
+  /* ---------- 进度条 ---------- */
+  .progress{height:4px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:20px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .3s ease}
+
+  /* ---------- 卡片 ---------- */
+  .card{
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--border);border-radius:18px;
+    padding:26px 26px 22px;
+    box-shadow:0 18px 50px rgba(0,0,0,.35);
+  }
+  .tag{
+    display:inline-block;font-size:12px;color:var(--accent2);
+    border:1px solid var(--border2);border-radius:99px;
+    padding:3px 12px;margin-bottom:14px;letter-spacing:1px;
+  }
+  .question{font-size:19px;line-height:1.7;font-weight:600;margin-bottom:22px}
+
+  /* ---------- 选项 ---------- */
+  .options{display:flex;flex-direction:column;gap:11px}
+  .option{
+    display:flex;align-items:center;gap:12px;
+    padding:13px 16px;border:1px solid var(--border);border-radius:12px;
+    cursor:pointer;transition:.16s;background:rgba(13,21,38,.5);
+    line-height:1.55;
+  }
+  .option:hover{border-color:var(--border2);background:rgba(47,123,255,.08)}
+  .opt-label{flex:1}
+  .opt-mark{font-weight:700;font-size:17px;min-width:20px;text-align:center}
+  .option.selected{border-color:var(--accent);background:rgba(47,123,255,.14);box-shadow:0 0 0 1px rgba(47,123,255,.3) inset}
+  .option.correct{border-color:var(--green);background:rgba(47,208,138,.14)}
+  .option.correct .opt-mark{color:var(--green)}
+  .option.wrong{border-color:var(--red);background:rgba(255,93,108,.13)}
+  .option.wrong .opt-mark{color:var(--red)}
+  .option.judge{font-size:17px}
+
+  /* 背题模式的“发光”效果 */
+  .option.glow{
+    border-color:var(--accent2);
+    background:linear-gradient(135deg,rgba(47,123,255,.30),rgba(67,217,255,.16));
+    animation:glowPulse 1.8s ease-in-out infinite;
+  }
+  .option.glow .opt-mark{color:#fff}
+  @keyframes glowPulse{
+    0%,100%{box-shadow:0 0 6px 1px rgba(47,123,255,.35)}
+    50%{box-shadow:0 0 28px 7px rgba(67,217,255,.62)}
+  }
+
+  /* ---------- 反馈 / 解析 ---------- */
+  .feedback-area{margin-top:20px;min-height:26px}
+  .feedback{font-weight:600;font-size:16px}
+  .feedback.ok{color:var(--green)}
+  .feedback.no{color:var(--red)}
+  .hint{color:var(--dim);font-size:13px}
+  .reveal-area{margin-top:20px}
+  .explain{
+    border:1px solid var(--border2);border-radius:12px;
+    background:rgba(47,123,255,.06);padding:15px 16px;
+    animation:fadeIn .3s ease;
+  }
+  .explain-title{color:var(--accent2);font-weight:700;font-size:13px;letter-spacing:2px;margin-bottom:8px}
+  .explain-body{line-height:1.7;color:#dbe6f7;font-size:15px}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- 底部操作 ---------- */
+  .actions{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+  .actions .btn{flex:1}
+  .score{text-align:center;color:var(--dim);font-size:13px;margin-top:18px}
+
+  /* ---------- 首页 ---------- */
+  .home{text-align:center;padding-top:56px}
+  .logo{font-size:44px;color:var(--accent2);filter:drop-shadow(0 0 14px rgba(67,217,255,.55));margin-bottom:16px}
+  .home h1{font-size:30px;font-weight:700;letter-spacing:2px}
+  .home .sub{color:var(--dim);margin-top:10px;font-size:15px;letter-spacing:1px}
+  .home .meta{color:var(--dim);font-size:13px;margin-top:6px}
+  .menu{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px}
+  .menu-card{
+    font:inherit;color:var(--text);cursor:pointer;
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--border);border-radius:18px;
+    padding:28px 18px;transition:.2s;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+  }
+  .menu-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 14px 34px rgba(47,123,255,.22)}
+  .menu-icon{font-size:30px;color:var(--accent2)}
+  .menu-title{font-size:18px;font-weight:700;letter-spacing:2px}
+  .menu-desc{font-size:12px;color:var(--dim)}
+  .continue{margin-top:26px}
+
+  @media(max-width:640px){
+    .menu{grid-template-columns:1fr}
+    .question{font-size:17px}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="questions.js"></script>
+<script>
+const CONFIG = { title: "安全规章制度题库", subtitle: "顺序练题 · 随机练习 · 背题" };
+document.title = CONFIG.title;
+
+const app = document.getElementById('app');
+
+// ---------- 数据预处理 ----------
+const QS = questions.map(function (q, i) {
+  const n = Object.assign({}, q);
+  n.id = q.id != null ? q.id : (i + 1);
+  if (q.type === 'judge') {
+    const idx = q.options.indexOf(q.answer);
+    n.correctIndexes = [idx >= 0 ? idx : 0];
+  } else if (q.type === 'multi') {
+    n.correctIndexes = q.answer.map(function (l) { return l.charCodeAt(0) - 65; });
+  } else {
+    n.correctIndexes = [q.answer.charCodeAt(0) - 65];
+  }
+  return n;
+});
+
+// ---------- 状态 ----------
+let mode = null;      // 'sequential' | 'random' | 'memorize'
+let order = [];
+let pos = 0;
+let selected = new Set();
+let answered = false;
+let stats = { answered: 0, correct: 0 };
+
+// ---------- 工具 ----------
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function cur() { return QS[order[pos]]; }
+function letter(i) { return String.fromCharCode(65 + i); }
+function escapeHTML(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function isCorrect(q, s) {
+  if (q.correctIndexes.length !== s.size) return false;
+  for (const i of q.correctIndexes) if (!s.has(i)) return false;
+  return true;
+}
+function typeLabel(q) {
+  return q.type === 'single' ? '单选题' : q.type === 'multi' ? '多选题' : '判断题';
+}
+function optionLabel(q, i) {
+  if (q.type === 'judge') {
+    return (q.options[i] === '正确' ? '✓ ' : '✗ ') + q.options[i];
+  }
+  return letter(i) + '. ' + q.options[i];
+}
+function saveProgress() {
+  if (!mode || mode === 'random') return;
+  try { localStorage.setItem('tiku_progress', JSON.stringify({ mode: mode, pos: pos })); } catch (e) {}
+}
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem('tiku_progress')); } catch (e) { return null; }
+}
+
+// ---------- 交互 ----------
+function start(m) {
+  mode = m;
+  order = (m === 'random') ? shuffle(QS.map(function (_, i) { return i; })) : QS.map(function (_, i) { return i; });
+  pos = 0;
+  stats = { answered: 0, correct: 0 };
+  resetQ();
+  render();
+}
+function goHome() { mode = null; render(); }
+function resetQ() { selected = new Set(); answered = false; }
+function goPrev() { if (pos > 0) { pos--; resetQ(); render(); } }
+function goNext() {
+  if (pos >= order.length - 1) return;
+  if (mode !== 'memorize' && !answered) return; // 练题模式需先作答
+  pos++; resetQ(); render();
+}
+function selectOption(i) {
+  if (answered) return;
+  const q = cur();
+  if (q.type === 'multi') { selected.has(i) ? selected.delete(i) : selected.add(i); }
+  else { selected = new Set([i]); }
+  render();
+}
+function submit() {
+  if (answered || selected.size === 0) return;
+  answered = true;
+  const q = cur();
+  if (isCorrect(q, selected)) stats.correct++;
+  stats.answered++;
+  render();
+}
+function continueProgress() {
+  const p = loadProgress();
+  if (!p) return;
+  mode = (p.mode === 'memorize') ? 'memorize' : 'sequential';
+  order = QS.map(function (_, i) { return i; });
+  pos = Math.min(p.pos, order.length - 1);
+  stats = { answered: 0, correct: 0 };
+  resetQ();
+  render();
+}
+
+// ---------- 渲染 ----------
+function render() {
+  if (!mode) { renderHome(); return; }
+  if (mode === 'memorize') renderMemorize();
+  else renderPractice();
+  saveProgress();
+}
+
+function renderHome() {
+  const p = loadProgress();
+  const contBtn = (p && p.pos > 0)
+    ? '<button class="btn ghost continue" data-act="cont">继续上次 · 第 ' + (p.pos + 1) + ' 题</button>'
+    : '';
+  app.innerHTML =
+    '<div class="home">' +
+      '<div class="logo">◆</div>' +
+      '<h1>' + escapeHTML(CONFIG.title) + '</h1>' +
+      '<p class="sub">' + escapeHTML(CONFIG.subtitle) + '</p>' +
+      '<p class="meta">共 ' + QS.length + ' 道题 · 单选 / 多选 / 判断</p>' +
+      '<div class="menu">' +
+        '<button class="menu-card" data-act="seq">' +
+          '<span class="menu-icon">⇢</span><span class="menu-title">顺序练题</span><span class="menu-desc">按编号依次作答</span>' +
+        '</button>' +
+        '<button class="menu-card" data-act="rand">' +
+          '<span class="menu-icon">⟳</span><span class="menu-title">随机练习</span><span class="menu-desc">打乱顺序随机抽题</span>' +
+        '</button>' +
+        '<button class="menu-card" data-act="mem">' +
+          '<span class="menu-icon">◈</span><span class="menu-title">背题模式</span><span class="menu-desc">显示答案与解析</span>' +
+        '</button>' +
+      '</div>' +
+      contBtn +
+    '</div>';
+}
+
+function practiceOption(q, i) {
+  const cls = ['option'];
+  if (q.type === 'judge') cls.push('judge');
+  let mark = '';
+  if (selected.has(i)) cls.push('selected');
+  if (answered) {
+    if (q.correctIndexes.indexOf(i) >= 0) { cls.push('correct'); mark = '✓'; }
+    else if (selected.has(i)) { cls.push('wrong'); mark = '✗'; }
+  }
+  return '<div class="' + cls.join(' ') + '" data-act="opt" data-idx="' + i + '">' +
+    '<span class="opt-label">' + escapeHTML(optionLabel(q, i)) + '</span>' +
+    '<span class="opt-mark">' + mark + '</span></div>';
+}
+
+function renderPractice() {
+  const q = cur();
+  const total = order.length;
+  const modeLabel = mode === 'sequential' ? '顺序练题' : '随机练习';
+  const pct = stats.answered ? Math.round(stats.correct / stats.answered * 100) : 0;
+
+  const opts = q.options.map(function (_, i) { return practiceOption(q, i); }).join('');
+
+  let feedback;
+  if (answered) {
+    feedback = isCorrect(q, selected)
+      ? '<div class="feedback ok">回答正确</div>'
+      : '<div class="feedback no">回答错误</div>';
+  } else {
+    feedback = q.type === 'multi'
+      ? '<div class="hint">多选题：可勾选多个选项</div>'
+      : '<div class="hint">点击选项后，点“确认答案”</div>';
+  }
+
+  const actionBtn = !answered
+    ? '<button class="btn primary" data-act="submit" ' + (selected.size === 0 ? 'disabled' : '') + '>确认答案</button>'
+    : (pos < total - 1
+        ? '<button class="btn primary" data-act="next">下一题</button>'
+        : '<button class="btn primary" data-act="home">完成，返回首页</button>');
+
+  app.innerHTML =
+    '<header class="topbar">' +
+      '<button class="btn ghost" data-act="home">← 返回</button>' +
+      '<div class="mode-title">' + modeLabel + '</div>' +
+      '<div class="counter">第 ' + (pos + 1) + ' / ' + total + ' 题</div>' +
+    '</header>' +
+    '<div class="progress"><div class="progress-fill" style="width:' + ((pos + 1) / total * 100).toFixed(1) + '%"></div></div>' +
+    '<div class="card question-card">' +
+      '<div class="tag">' + typeLabel(q) + ' · 第' + q.id + '题</div>' +
+      '<div class="question">' + escapeHTML(q.question) + '</div>' +
+      '<div class="options">' + opts + '</div>' +
+      '<div class="feedback-area">' + feedback + '</div>' +
+      '<div class="actions">' +
+        '<button class="btn ghost" data-act="prev" ' + (pos === 0 ? 'disabled' : '') + '>上一题</button>' +
+        actionBtn +
+      '</div>' +
+    '</div>' +
+    '<div class="score">已答 ' + stats.answered + ' 题 · 正确率 ' + pct + '%</div>';
+}
+
+function memorizeOption(q, i) {
+  const cls = ['option'];
+  if (q.type === 'judge') cls.push('judge');
+  let mark = '';
+  if (answered && q.correctIndexes.indexOf(i) >= 0) { cls.push('glow'); mark = '✓'; }
+  return '<div class="' + cls.join(' ') + '">' +
+    '<span class="opt-label">' + escapeHTML(optionLabel(q, i)) + '</span>' +
+    '<span class="opt-mark">' + mark + '</span></div>';
+}
+
+function renderMemorize() {
+  const q = cur();
+  const total = order.length;
+  const opts = q.options.map(function (_, i) { return memorizeOption(q, i); }).join('');
+
+  const revealArea = answered
+    ? '<div class="explain"><div class="explain-title">解析</div><div class="explain-body">' + escapeHTML(q.explanation || '暂无解析') + '</div></div>'
+    : '<button class="btn primary" data-act="reveal">显示答案与解析</button>';
+
+  app.innerHTML =
+    '<header class="topbar">' +
+      '<button class="btn ghost" data-act="home">← 返回</button>' +
+      '<div class="mode-title">背题模式</div>' +
+      '<div class="counter">第 ' + (pos + 1) + ' / ' + total + ' 题</div>' +
+    '</header>' +
+    '<div class="progress"><div class="progress-fill" style="width:' + ((pos + 1) / total * 100).toFixed(1) + '%"></div></div>' +
+    '<div class="card question-card">' +
+      '<div class="tag">' + typeLabel(q) + ' · 第' + q.id + '题</div>' +
+      '<div class="question">' + escapeHTML(q.question) + '</div>' +
+      '<div class="options">' + opts + '</div>' +
+      '<div class="reveal-area">' + revealArea + '</div>' +
+      '<div class="actions">' +
+        '<button class="btn ghost" data-act="prev" ' + (pos === 0 ? 'disabled' : '') + '>上一题</button>' +
+        '<button class="btn ghost" data-act="next" ' + (pos === total - 1 ? 'disabled' : '') + '>下一题</button>' +
+      '</div>' +
+    '</div>';
+}
+
+// ---------- 事件（委托） ----------
+app.addEventListener('click', function (e) {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  const idx = el.dataset.idx != null ? parseInt(el.dataset.idx, 10) : null;
+  switch (act) {
+    case 'home': goHome(); break;
+    case 'seq': start('sequential'); break;
+    case 'rand': start('random'); break;
+    case 'mem': start('memorize'); break;
+    case 'cont': continueProgress(); break;
+    case 'opt': selectOption(idx); break;
+    case 'submit': submit(); break;
+    case 'reveal': answered = true; render(); break;
+    case 'prev': goPrev(); break;
+    case 'next': goNext(); break;
+  }
+});
+
+document.addEventListener('keydown', function (e) {
+  if (!mode) return;
+  if (e.key === 'ArrowLeft') goPrev();
+  else if (e.key === 'ArrowRight') goNext();
+  else if (e.key === 'Escape') goHome();
+});
+
+// ---------- 启动 ----------
+renderHome();
+</script>
+</body>
+</html>

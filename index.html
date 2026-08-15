@@ -187,10 +187,29 @@
 }
 
 .search-button{
-  flex:0 0 auto;
+  flex:0 0 52px;
+  width:52px;
   height:44px;
-  padding:0 18px;
+  padding:0;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
+
+.search-icon{
+  width:22px;
+  height:22px;
+  display:block;
+  fill:none;
+  stroke:#ffffff;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
+}
+
+
 
 .search-error{
   min-height:20px;
@@ -198,22 +217,18 @@
   color:var(--red);
   font-size:13px;
 }
-
-@media(max-width:480px){
+  @media(max-width:480px){
   .question-search{
     gap:8px;
   }
 
   .search-button{
-    padding:0 14px;
+    flex-basis:48px;
+    width:48px;
   }
 }
 
 
-
-
-
-  
   /* ---------- 反馈 / 解析 ---------- */
   .feedback-area{margin-top:20px;min-height:26px}
   .feedback{font-weight:600;font-size:16px}
@@ -552,7 +567,19 @@ function renderMemorize() {
         'max="' + total + '" ' +
         'placeholder="输入题号 1-' + total + '" ' +
         'aria-label="输入要跳转的题号">' +
-      '<button class="btn primary search-button" data-act="jump"></button>' +
+     '<button ' +
+  'class="btn primary search-button" ' +
+  'type="button" ' +
+  'data-act="jump" ' +
+  'aria-label="搜索题号" ' +
+  'title="搜索题号">' +
+  '<svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+    '<circle cx="11" cy="11" r="7"></circle>' +
+    '<path d="M20 20L16.5 16.5"></path>' +
+  '</svg>' +
+'</button>' +
+
+
     '</div>' +
 
     '<div id="question-search-error" class="search-error" aria-live="polite"></div>' +

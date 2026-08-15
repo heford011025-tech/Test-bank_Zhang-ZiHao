@@ -155,6 +155,65 @@
   }
 }
 
+  /* ---------- 背题模式题号 ---------- */
+.question-search{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.search-input{
+  flex:1;
+  min-width:0;
+  height:44px;
+  padding:0 14px;
+  font:inherit;
+  color:var(--text);
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  outline:none;
+  transition:border-color .18s, box-shadow .18s;
+}
+
+.search-input::placeholder{
+  color:var(--dim);
+}
+
+.search-input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(47,123,255,.14);
+}
+
+.search-button{
+  flex:0 0 auto;
+  height:44px;
+  padding:0 18px;
+}
+
+.search-error{
+  min-height:20px;
+  margin:-8px 0 12px;
+  color:var(--red);
+  font-size:13px;
+}
+
+@media(max-width:480px){
+  .question-search{
+    gap:8px;
+  }
+
+  .search-button{
+    padding:0 14px;
+  }
+}
+
+
+
+
+
+  
   /* ---------- 反馈 / 解析 ---------- */
   .feedback-area{margin-top:20px;min-height:26px}
   .feedback{font-weight:600;font-size:16px}
@@ -298,6 +357,39 @@ function start(m) {
 }
 function goHome() { mode = null; render(); }
 function resetQ() { selected = new Set(); answered = false; }
+function jumpToQuestion() {
+  if (mode !== 'memorize') return;
+
+  const input = document.getElementById('question-search-input');
+  const error = document.getElementById('question-search-error');
+
+  if (!input) return;
+
+  const value = input.value.trim();
+  const questionNumber = Number(value);
+
+  if (value === '' || !Number.isInteger(questionNumber)) {
+    if (error) error.textContent = '请输入有效的整数题号';
+    input.focus();
+    return;
+  }
+
+  if (questionNumber < 1 || questionNumber > QS.length) {
+    if (error) {
+      error.textContent = '请输入 1-' + QS.length + ' 之间的题号';
+    }
+    input.focus();
+    input.select();
+    return;
+  }
+
+  // 页面题号从 1 开始，数组位置从 0 开始。
+  pos = questionNumber - 1;
+  resetQ();
+  render();
+}
+
+
 function goPrev() { if (pos > 0) { pos--; resetQ(); render(); } }
 function goNext() {
   if (pos >= order.length - 1) return;
@@ -447,9 +539,27 @@ function renderMemorize() {
       '<button class="btn ghost" data-act="home">← 返回</button>' +
       '<div class="mode-title">背题模式</div>' +
       '<div class="counter">第 ' + (pos + 1) + ' / ' + total + ' 题</div>' +
-    '</header>' +
+        '</header>' +
     '<div class="progress"><div class="progress-fill" style="width:' + ((pos + 1) / total * 100).toFixed(1) + '%"></div></div>' +
+
+    '<div class="question-search">' +
+      '<input ' +
+        'id="question-search-input" ' +
+        'class="search-input" ' +
+        'type="number" ' +
+        'inputmode="numeric" ' +
+        'min="1" ' +
+        'max="' + total + '" ' +
+        'placeholder="输入题号 1-' + total + '" ' +
+        'aria-label="输入要跳转的题号">' +
+      '<button class="btn primary search-button" data-act="jump"></button>' +
+    '</div>' +
+
+    '<div id="question-search-error" class="search-error" aria-live="polite"></div>' +
+
     '<div class="card question-card">' +
+
+
       '<div class="tag">' + typeLabel(q) + ' · 第' + q.id + '题</div>' +
       '<div class="question">' + escapeHTML(q.question) + '</div>' +
       '<div class="options">' + opts + '</div>' +
@@ -476,6 +586,7 @@ app.addEventListener('click', function (e) {
     case 'opt': selectOption(idx); break;
     case 'submit': submit(); break;
     case 'reveal': answered = true; render(); break;
+    case 'jump': jumpToQuestion(); break;
     case 'prev': goPrev(); break;
     case 'next': goNext(); break;
   }
@@ -483,10 +594,29 @@ app.addEventListener('click', function (e) {
 
 document.addEventListener('keydown', function (e) {
   if (!mode) return;
-  if (e.key === 'ArrowLeft') goPrev();
-  else if (e.key === 'ArrowRight') goNext();
-  else if (e.key === 'Escape') goHome();
+
+  const isSearchInput = e.target &&
+    e.target.id === 'question-search-input';
+
+  if (isSearchInput && e.key === 'Enter') {
+    e.preventDefault();
+    jumpToQuestion();
+    return;
+  }
+
+  // 输入题号时，不执行左右方向键翻题。
+  if (isSearchInput) return;
+
+  if (e.key === 'ArrowLeft') {
+    goPrev();
+  } else if (e.key === 'ArrowRight') {
+    goNext();
+  } else if (e.key === 'Escape') {
+    goHome();
+  }
 });
+
+
 
 // ---------- 启动 ----------
 renderHome();
